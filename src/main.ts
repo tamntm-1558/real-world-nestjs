@@ -9,19 +9,18 @@ async function bootstrap() {
   
   // --- Global prefix ---
   const configService = app.get(ConfigService);
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix(configService.get<string>('prefixApi') || 'api');
 
   // --- Versioning ---
   app.enableVersioning({
     type: VersioningType.URI,
-    defaultVersion: '1',
+    defaultVersion: configService.get<string>('apiVersion'),
   });
 
   // --- Swagger ---
   const config = new DocumentBuilder()
     .setTitle('RealWorld API')
     .setDescription('NestJS RealWorld API Documentation')
-    .setVersion('1.0')
     .addTag('api')
     .addBearerAuth()
     .build();
@@ -29,7 +28,5 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document);
   const port = configService.get<number>('port') || 3000;
   await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}`);
-  console.log(`Swagger docs available at: http://localhost:${port}/docs`);
 }
 bootstrap();
