@@ -1,13 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, BeforeInsert, OneToMany } from 'typeorm';
+import { Entity, Column, OneToMany } from 'typeorm';
+import { BaseEntity } from '../common/base.entity';
 import { Article } from "../articles/article.entity"
 import { Comment } from '../comments/comment.entity';
 
 @Entity('users')
-export class User {
-    @PrimaryGeneratedColumn()
-    id: number;
-
-    @Column({ unique: true })
+export class User extends BaseEntity {
+    @Column()
     username: string;
 
     @Column({ unique: true })
@@ -21,12 +19,6 @@ export class User {
 
     @Column({ nullable: true })
     image: string;
-
-    @CreateDateColumn()
-    createdAt: Date;
-
-    @UpdateDateColumn()
-    updatedAt: Date;
 
     @OneToMany(
         () => Article,

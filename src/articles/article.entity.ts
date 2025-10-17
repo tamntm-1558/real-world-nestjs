@@ -1,13 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, ManyToMany, JoinTable, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, Column, ManyToOne, ManyToMany, JoinTable, OneToMany } from 'typeorm';
 import { User } from '../users/user.entity';
 import { Comment } from '../comments/comment.entity';
 import { Tag } from '../tags/tag.entity';
-
+import { BaseEntity } from '../common/base.entity';
+    
 @Entity('articles')
-export class Article {
-    @PrimaryGeneratedColumn()
-    id: number;
-
+export class Article extends BaseEntity {
     @Column({ unique: true })
     slug: string;
 
@@ -50,10 +48,4 @@ export class Article {
 
     @Column({ default: 0 })
     favoritesCount: number;
-
-    @CreateDateColumn()
-    createdAt: Date;
-
-    @UpdateDateColumn()
-    updatedAt: Date;
 }
