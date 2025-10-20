@@ -1,7 +1,3 @@
-import { Article } from "../articles/article.entity"
-import { Comment } from "../comments/comment.entity"
-import { Tag } from "../tags/tag.entity"
-import { User } from "../users/user.entity"
 import { DataSource } from "typeorm"
 import { config } from 'dotenv';
 
@@ -14,7 +10,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE || "realworld",
-  entities: [User, Article, Comment, Tag],
+  entities: ["src/**/**/*.entity*.ts"],
   migrations: ["src/migrations/*.ts"],
   synchronize: false, // Set to false for production
 })

@@ -1,19 +1,17 @@
 import {
     Entity,
-    PrimaryGeneratedColumn,
     Column,
-    CreateDateColumn,
-    UpdateDateColumn,
     ManyToOne,
     JoinColumn,
     } from 'typeorm';
 import { BaseEntity } from '../common/base.entity';
 import { User } from '../users/user.entity';
 import { Article } from '../articles/article.entity';
+import { FIELD_LENGTH } from '../config/constant';
 
 @Entity('comments')
 export class Comment extends BaseEntity {
-    @Column('text')
+    @Column({ type: 'text' })
     body: string;
 
     @ManyToOne(() => Article, (article) => article.comments, {

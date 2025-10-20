@@ -2,19 +2,20 @@ import { Entity, Column, OneToMany } from 'typeorm';
 import { BaseEntity } from '../common/base.entity';
 import { Article } from "../articles/article.entity"
 import { Comment } from '../comments/comment.entity';
+import { FIELD_LENGTH } from '../config/constant';
 
 @Entity('users')
 export class User extends BaseEntity {
-    @Column()
+    @Column({ length: FIELD_LENGTH.USERNAME_MAX })
     username: string;
 
-    @Column({ unique: true })
+    @Column({ unique: true, length: FIELD_LENGTH.EMAIL_MAX })
     email: string;
 
-    @Column()
+    @Column({ length: FIELD_LENGTH.PASSWORD_MAX })
     password: string;
 
-    @Column({ nullable: true })
+    @Column({ nullable: true, length: FIELD_LENGTH.BIO_MAX })
     bio: string;
 
     @Column({ nullable: true })
