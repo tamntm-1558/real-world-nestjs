@@ -1,17 +1,14 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import configuration from './config/configuration';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { Module } from "@nestjs/common"
+import { TypeOrmModule } from "@nestjs/typeorm"
+import { AppDataSource } from "./config/typeorm.config"
+import { config } from 'dotenv';
+
+config();
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      load: [configuration],
-    }),
+    TypeOrmModule.forRoot(AppDataSource.options),
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
+
 export class AppModule {}
