@@ -1,13 +1,13 @@
 import { Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
-import { databaseConfig } from "./database/database.config"
+import { AppDataSource } from "./config/typeorm.config"
 import { config } from 'dotenv';
 
 config();
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot(databaseConfig),
+    TypeOrmModule.forRoot(AppDataSource.options),
   ],
 })
 
