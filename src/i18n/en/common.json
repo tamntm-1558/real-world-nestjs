@@ -1,0 +1,16 @@
+{
+  "errors": {
+    "notFound": "Resource not found",
+    "unauthorized": "Unauthorized access",
+    "forbidden": "Forbidden",
+    "badRequest": "Bad request",
+    "internalError": "Internal server error"
+  },
+  "validation": {
+    "required": "{field} is required",
+    "invalid": "{field} is invalid",
+    "min_length": "{field} must be at least {min} characters",
+    "max_length": "{field} must not exceed {max} characters",
+    "password_weak": "Password must contain at least one letter, one number, and one special character"
+  }
+}
