@@ -1,5 +1,7 @@
 export const DEFAULT_FAVORITE_COUNT = 0;
 
+export const SALT_HASH_PASSWORD = 10;
+
 // Validation regex patterns
 export const VALIDATION_REGEX = {
   // Email validation - RFC 5322 compliant

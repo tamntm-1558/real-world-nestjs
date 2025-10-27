@@ -12,6 +12,7 @@ import {
   FIELD_LENGTH, 
   VALIDATION_REGEX 
 } from "../../config/constant"
+import { Match } from "../../common/decorators/match.decorator"
 
 export class RegisterDto {
   @ApiProperty({
@@ -110,4 +111,16 @@ export class RegisterDto {
     message: i18nValidationMessage('common.validation.password_weak'),
   })
   password: string
+
+  @ApiProperty({
+    example: 'SecurePass123!',
+    description: 'Password confirmation (must match password)',
+    minLength: FIELD_LENGTH.PASSWORD_MIN,
+    maxLength: FIELD_LENGTH.PASSWORD_MAX,
+  })
+  @IsString()
+  @Match('password', {
+    message: i18nValidationMessage('common.validation.password_mismatch'),
+  })
+  passwordConfirmation: string
 }

@@ -11,6 +11,7 @@
     "invalid": "{field} is invalid",
     "min_length": "{field} must be at least {min} characters",
     "max_length": "{field} must not exceed {max} characters",
-    "password_weak": "Password must contain at least one letter, one number, and one special character"
+    "password_weak": "Password must contain at least one letter, one number, and one special character",
+    "password_mismatch": "Password confirmation does not match password"
   }
 }
