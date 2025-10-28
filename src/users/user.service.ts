@@ -15,20 +15,12 @@ export class UserService {
   ) {}
 
   /**
-   * Get the user repository instance
-   * @returns Repository<User> - The TypeORM repository for User entity
-   */
-  getUserRepository(): Repository<User> {
-    return this.userRepository;
-  }
-
-  /**
    * Check if a user exists by email or username
    * @param email - User's email
    * @param username - User's username
    * @returns The existing user or null
    */
-  async findExistingUser(email: string, username?: string): Promise<User | null> {
+  private async findExistingUser(email: string, username?: string): Promise<User | null> {
     const whereConditions = username 
       ? [{ email }, { username }]
       : [{ email }];
