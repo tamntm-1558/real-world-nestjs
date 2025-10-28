@@ -20,7 +20,7 @@ export class UserService {
    * @param username - User's username
    * @returns The existing user or null
    */
-  private async findExistingUser(email: string, username?: string): Promise<User | null> {
+  async findExistingUser(email: string, username?: string): Promise<User | null> {
     const whereConditions = username 
       ? [{ email }, { username }]
       : [{ email }];
