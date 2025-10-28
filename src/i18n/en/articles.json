@@ -1,0 +1,20 @@
+{
+  "errors": {
+    "not_found": "Article not found",
+    "not_author": "You are not the author of this article"
+  },
+  "article_created": "Article created successfully",
+  "article_updated": "Article updated successfully",
+  "article_deleted": "Article deleted successfully",
+  "article_not_found": "Article not found",
+  "article_favorited": "Article favorited successfully",
+  "article_unfavorited": "Article unfavorited successfully",
+  "unauthorized_update": "You are not authorized to update this article",
+  "unauthorized_delete": "You are not authorized to delete this article",
+  "slug_exists": "An article with this title already exists",
+  "create_failed": "Failed to create article",
+  "update_failed": "Failed to update article",
+  "delete_failed": "Failed to delete article",
+  "favorite_failed": "Failed to favorite article",
+  "unfavorite_failed": "Failed to unfavorite article"
+}
