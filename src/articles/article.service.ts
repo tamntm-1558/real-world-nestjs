@@ -1,16 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Article } from './article.entity';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { ArticleResponseDto } from './dto/article-response.dto';
+import { ArticleQueryDto } from './dto/article-query.dto';
+import { FeedQueryDto } from './dto/feed-query.dto';
 import { User } from '../users/user.entity';
+import { I18nService } from 'nestjs-i18n';
+import { PAGINATION } from 'src/config/constant';
 
 @Injectable()
 export class ArticleService {
   constructor(
     @InjectRepository(Article)
     private articleRepository: Repository<Article>,
+    private i18n: I18nService,
   ) {}
 
   /**
@@ -95,7 +101,7 @@ export class ArticleService {
       .orderBy('article.createdAt', 'DESC');
 
     if (query?.tag) {
-      queryBuilder.andWhere(':tag = ANY(article.tagList)', { tag: query.tag });
+      queryBuilder.andWhere('article.tagList = :tag', { tag: query.tag });
     }
 
     if (query?.author) {
@@ -106,8 +112,8 @@ export class ArticleService {
       queryBuilder.andWhere('favoritedBy.username = :favorited', { favorited: query.favorited });
     }
 
-    const limit = query?.limit || 20;
-    const offset = query?.offset || 0;
+    const limit = query?.limit || PAGINATION.DEFAULT_LIMIT;
+    const offset = query?.offset || PAGINATION.DEFAULT_OFFSET;
 
     queryBuilder.take(limit).skip(offset);
 
@@ -247,11 +253,170 @@ export class ArticleService {
    */
   async getFeed(
     userId: number,
-    limit: number = 20,
-    offset: number = 0,
+    limit: number = PAGINATION.DEFAULT_LIMIT,
+    offset: number = PAGINATION.DEFAULT_OFFSET,
   ): Promise<{ articles: Article[]; articlesCount: number }> {
     // This would require a Follow entity and relationship
     // For now, return empty array
     return { articles: [], articlesCount: 0 };
+  }
+
+  /**
+   * Create article with business logic and error handling
+   * @param createArticleDto - Article data
+   * @param user - Author user
+   * @returns Article response
+   */
+  async createArticle(createArticleDto: CreateArticleDto, user: User): Promise<{ article: ArticleResponseDto }> {
+    const article = await this.create(createArticleDto, user);
+    return {
+      article: new ArticleResponseDto(article, user.id),
+    };
+  }
+
+  /**
+   * Get all articles with business logic
+   * @param query - Query parameters
+   * @param currentUserId - Current user ID (optional)
+   * @returns Articles response
+   */
+  async getAllArticles(
+    query: ArticleQueryDto,
+    currentUserId?: number,
+  ): Promise<{ articles: ArticleResponseDto[]; articlesCount: number }> {
+    const { articles, articlesCount } = await this.findAll(query);
+
+    return {
+      articles: articles.map((article) => new ArticleResponseDto(article, currentUserId)),
+      articlesCount,
+    };
+  }
+
+  /**
+   * Get article feed with business logic
+   * @param userId - Current user ID
+   * @param query - Query parameters
+   * @returns Feed response
+   */
+  async getArticleFeed(
+    userId: number,
+    query: FeedQueryDto,
+  ): Promise<{ articles: ArticleResponseDto[]; articlesCount: number }> {
+    const { articles, articlesCount } = await this.getFeed(userId, query.limit, query.offset);
+
+    return {
+      articles: articles.map((article) => new ArticleResponseDto(article, userId)),
+      articlesCount,
+    };
+  }
+
+  /**
+   * Get single article with business logic and error handling
+   * @param slug - Article slug
+   * @param currentUserId - Current user ID (optional)
+   * @returns Article response
+   */
+  async getArticleBySlug(slug: string, currentUserId?: number): Promise<{ article: ArticleResponseDto }> {
+    const article = await this.findBySlug(slug);
+
+    if (!article) {
+      const message = await this.i18n.translate('articles.article_not_found');
+      throw new NotFoundException(message);
+    }
+
+    return {
+      article: new ArticleResponseDto(article, currentUserId),
+    };
+  }
+
+  /**
+   * Update article with business logic and error handling
+   * @param slug - Article slug
+   * @param updateArticleDto - Update data
+   * @param userId - Current user ID
+   * @returns Updated article response
+   */
+  async updateArticle(
+    slug: string,
+    updateArticleDto: UpdateArticleDto,
+    userId: number,
+  ): Promise<{ article: ArticleResponseDto }> {
+    const article = await this.update(slug, updateArticleDto, userId);
+
+    if (!article) {
+      const existingArticle = await this.findBySlug(slug);
+      
+      if (!existingArticle) {
+        const message = await this.i18n.translate('articles.article_not_found');
+        throw new NotFoundException(message);
+      }
+
+      const message = await this.i18n.translate('articles.unauthorized_update');
+      throw new ForbiddenException(message);
+    }
+
+    return {
+      article: new ArticleResponseDto(article, userId),
+    };
+  }
+
+  /**
+   * Delete article with business logic and error handling
+   * @param slug - Article slug
+   * @param userId - Current user ID
+   * @returns void
+   */
+  async deleteArticle(slug: string, userId: number): Promise<void> {
+    const deleted = await this.delete(slug, userId);
+
+    if (!deleted) {
+      const existingArticle = await this.findBySlug(slug);
+      
+      if (!existingArticle) {
+        const message = await this.i18n.translate('articles.article_not_found');
+        throw new NotFoundException(message);
+      }
+
+      const message = await this.i18n.translate('articles.unauthorized_delete');
+      throw new ForbiddenException(message);
+    }
+  }
+
+  /**
+   * Favorite article with business logic and error handling
+   * @param slug - Article slug
+   * @param user - User who favorites
+   * @returns Article response
+   */
+  async favoriteArticle(slug: string, user: User): Promise<{ article: ArticleResponseDto }> {
+    const article = await this.favorite(slug, user);
+
+    if (!article) {
+      const message = await this.i18n.translate('articles.article_not_found');
+      throw new NotFoundException(message);
+    }
+
+    return {
+      article: new ArticleResponseDto(article, user.id),
+    };
+  }
+
+  /**
+   * Unfavorite article with business logic and error handling
+   * @param slug - Article slug
+   * @param user - User who unfavorites
+   * @returns Article response
+   */
+  async unfavoriteArticle(slug: string, user: User): Promise<{ article: ArticleResponseDto }> {
+    const article = await this.unfavorite(slug, user);
+
+    if (!article) {
+      const message = await this.i18n.translate('articles.article_not_found');
+      throw new NotFoundException(message);
+    }
+
+    return {
+      article: new ArticleResponseDto(article, user.id),
+    };
   }
 }

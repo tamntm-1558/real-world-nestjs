@@ -2,6 +2,15 @@ export const DEFAULT_FAVORITE_COUNT = 0;
 
 export const SALT_HASH_PASSWORD = 10;
 
+// Common pagination constants
+export const PAGINATION = {
+  DEFAULT_LIMIT: 20,
+  DEFAULT_OFFSET: 0,
+  MIN_LIMIT: 1,
+  MAX_LIMIT: 100,
+  MIN_OFFSET: 0,
+} as const;
+
 // Validation regex patterns
 export const VALIDATION_REGEX = {
   // Email validation - RFC 5322 compliant

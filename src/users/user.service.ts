@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserResponseDto } from './dto/update-user-response.dto';
 import * as bcrypt from 'bcrypt';
 import { I18nService } from 'nestjs-i18n';
 import { SALT_HASH_PASSWORD } from 'src/config/constant';
@@ -135,5 +137,44 @@ export class UserService {
       bio: user.bio,
       image: user.image,
     };
+  }
+
+  /**
+   * Update user profile with business logic and error handling
+   * @param userId - User's ID
+   * @param updateUserDto - Update data
+   * @returns Update user response
+   */
+  async updateUserProfile(userId: number, updateUserDto: UpdateUserDto): Promise<UpdateUserResponseDto> {
+    // Check if username is being updated and already exists
+    if (updateUserDto.username) {
+      const existingUser = await this.findExistingUser('', updateUserDto.username);
+
+      // If found and it's not the current user, throw conflict
+      if (existingUser && existingUser.id !== userId) {
+        const message = await this.i18n.translate('users.errors.username_already_exists');
+        throw new ConflictException(message);
+      }
+    }
+
+    // Update user
+    const updatedUser = await this.updateUser(userId, updateUserDto);
+
+    if (!updatedUser) {
+      const message = await this.i18n.translate('auth.errors.user_not_found');
+      throw new UnauthorizedException(message);
+    }
+
+    const successMessage = await this.i18n.translate('users.success.update_success');
+
+    return new UpdateUserResponseDto(successMessage, updatedUser);
+  }
+
+  /**
+   * Expose user repository for other services
+   * @returns User repository
+   */
+  getUserRepository(): Repository<User> {
+    return this.userRepository;
   }
 }
