@@ -88,7 +88,7 @@ export class ArticleService {
    * @returns Array of articles
    */
   async findAll(query?: {
-    tag?: string;
+    tag?: string[];
     author?: string;
     favorited?: string;
     limit?: number;
@@ -100,8 +100,17 @@ export class ArticleService {
       .leftJoinAndSelect('article.favoritedBy', 'favoritedBy')
       .orderBy('article.createdAt', 'DESC');
 
-    if (query?.tag) {
-      queryBuilder.andWhere('article.tagList = :tag', { tag: query.tag });
+    if (query?.tag && Array.isArray(query.tag) && query.tag.length > 0) {
+      const andConditions = query.tag.map((tag, index) => 
+        `FIND_IN_SET(:tag${index}, article.tagList) > 0`
+      ).join(' AND ');
+      
+      const tagParams = query.tag.reduce((params, tag, index) => {
+        params[`tag${index}`] = tag;
+        return params;
+      }, {} as Record<string, string>);
+      
+      queryBuilder.andWhere(`(${andConditions})`, tagParams);
     }
 
     if (query?.author) {
@@ -245,7 +254,7 @@ export class ArticleService {
   }
 
   /**
-   * Get feed for user (articles from followed users)
+   * TODO: Get feed for user (articles from followed users)
    * @param userId - Current user ID
    * @param limit - Number of articles
    * @param offset - Offset for pagination

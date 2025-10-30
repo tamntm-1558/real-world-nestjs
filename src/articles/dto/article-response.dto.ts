@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { AuthorDto } from 'src/auth/dto/author.dto';
 
 export class ArticleResponseDto {
   @ApiProperty({ example: 1 })
@@ -20,21 +21,10 @@ export class ArticleResponseDto {
   tagList: string[];
 
   @ApiProperty({ 
-    example: {
-      id: 1,
-      username: 'johndoe',
-      email: 'john@example.com',
-      bio: 'Developer',
-      image: 'https://example.com/avatar.jpg'
-    }
+    type: AuthorDto,
+    description: 'Article author information'
   })
-  author: {
-    id: number;
-    username: string;
-    email: string;
-    bio: string;
-    image: string;
-  };
+  author: AuthorDto;
 
   @ApiProperty({ example: 0 })
   favoritesCount: number;
@@ -55,17 +45,9 @@ export class ArticleResponseDto {
     this.description = article.description;
     this.body = article.body;
     this.tagList = article.tagList || [];
-    this.author = {
-      id: article.author.id,
-      username: article.author.username,
-      email: article.author.email,
-      bio: article.author.bio,
-      image: article.author.image,
-    };
+    this.author = new AuthorDto(article.author);
     this.favoritesCount = article.favoritesCount || 0;
-    this.favorited = currentUserId 
-      ? article.favoritedBy?.some((user: any) => user.id === currentUserId) || false
-      : false;
+    this.favorited = !!(currentUserId && article.favoritedBy?.some((user: any) => user.id === currentUserId));
     this.createdAt = article.createdAt;
     this.updatedAt = article.updatedAt;
   }
