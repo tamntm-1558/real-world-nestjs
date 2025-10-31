@@ -1,0 +1,9 @@
+{
+  "comment_created": "Comment created successfully",
+  "comment_deleted": "Comment deleted successfully",
+  "comment_not_found": "Comment not found",
+  "unauthorized_delete": "You are not authorized to delete this comment",
+  "create_failed": "Failed to create comment",
+  "delete_failed": "Failed to delete comment",
+  "invalid_article": "Article not found for this comment"
+}
