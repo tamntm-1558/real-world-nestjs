@@ -1,16 +1,30 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsInt, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsOptional, IsString, IsInt, Min, Max, IsArray } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import { PAGINATION } from '../../config/constant';
 
 export class ArticleQueryDto {
   @ApiPropertyOptional({
-    description: 'Filter by tag',
-    example: 'nodejs',
+    description: 'Filter by tags. Use comma-separated values for multiple tags (e.g., "nestjs,typescript") or repeat the parameter (?tag=nestjs&tag=typescript)',
+    example: 'nestjs,typescript',
+    type: String,
   })
   @IsOptional()
-  @IsString()
-  tag?: string;
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      if (value.includes(',')) {
+        return value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+      }
+      return [value]; // Convert single string to array
+    }
+    if (Array.isArray(value)) {
+      return value; // Keep array as is
+    }
+    return undefined;
+  })
+  @IsArray({ message: 'tag must be a string or an array of strings' })
+  @IsString({ each: true })
+  tag?: string[];
 
   @ApiPropertyOptional({
     description: 'Filter by author username',

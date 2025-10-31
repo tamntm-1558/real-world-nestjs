@@ -6,7 +6,7 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { CommentResponseDto } from './dto/comment-response.dto';
 import { CommentQueryDto } from './dto/comment-query.dto';
 import { User } from '../users/user.entity';
-import { Article } from '../articles/article.entity';
+import { ArticleService } from '../articles/article.service';
 import { I18nService } from 'nestjs-i18n';
 
 @Injectable()
@@ -14,8 +14,7 @@ export class CommentService {
   constructor(
     @InjectRepository(Comment)
     private commentRepository: Repository<Comment>,
-    @InjectRepository(Article)
-    private articleRepository: Repository<Article>,
+    private articleService: ArticleService,
     private i18n: I18nService,
   ) {}
 
@@ -32,9 +31,7 @@ export class CommentService {
     user: User,
   ): Promise<{ comment: CommentResponseDto }> {
     // Find article
-    const article = await this.articleRepository.findOne({
-      where: { slug: articleSlug },
-    });
+    const article = await this.articleService.findBySlug(articleSlug);
 
     if (!article) {
       const message = await this.i18n.translate('articles.article_not_found');
@@ -68,9 +65,7 @@ export class CommentService {
     query: CommentQueryDto,
   ): Promise<{ comments: CommentResponseDto[]; commentsCount: number }> {
     // Find article
-    const article = await this.articleRepository.findOne({
-      where: { slug: articleSlug },
-    });
+    const article = await this.articleService.findBySlug(articleSlug);
 
     if (!article) {
       const message = await this.i18n.translate('articles.article_not_found');
@@ -107,9 +102,7 @@ export class CommentService {
     userId: number,
   ): Promise<void> {
     // Find article
-    const article = await this.articleRepository.findOne({
-      where: { slug: articleSlug },
-    });
+    const article = await this.articleService.findBySlug(articleSlug);
 
     if (!article) {
       const message = await this.i18n.translate('articles.article_not_found');
@@ -137,17 +130,5 @@ export class CommentService {
     }
 
     await this.commentRepository.remove(comment);
-  }
-
-  /**
-   * Get comment by ID
-   * @param commentId - Comment ID
-   * @returns Comment or null
-   */
-  async findById(commentId: number): Promise<Comment | null> {
-    return await this.commentRepository.findOne({
-      where: { id: commentId },
-      relations: ['author', 'article'],
-    });
   }
 }
