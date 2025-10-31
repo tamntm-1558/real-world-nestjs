@@ -7,6 +7,7 @@ import { AppDataSource } from "./config/typeorm.config"
 import configuration from "./config/configuration"
 import { AuthModule } from "./auth/auth.module"
 import { ArticleModule } from "./articles/article.module"
+import { CommentModule } from "./comments/comment.module"
 import { AcceptLanguageResolver, I18nModule } from "nestjs-i18n"
 import { config } from 'dotenv';
 import * as path from 'path';
@@ -30,6 +31,7 @@ config();
     TypeOrmModule.forRoot(AppDataSource.options),
     AuthModule,
     ArticleModule,
+    CommentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
