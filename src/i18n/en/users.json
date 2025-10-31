@@ -1,0 +1,9 @@
+{
+  "success": {
+    "update_success": "User profile updated successfully"
+  },
+  "errors": {
+    "update_failed": "Failed to update user profile",
+    "username_already_exists": "User with this username already exists"
+  }
+}
