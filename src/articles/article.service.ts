@@ -87,13 +87,7 @@ export class ArticleService {
    * @param query - Query parameters
    * @returns Array of articles
    */
-  async findAll(query?: {
-    tag?: string[];
-    author?: string;
-    favorited?: string;
-    limit?: number;
-    offset?: number;
-  }): Promise<{ articles: Article[]; articlesCount: number }> {
+  async findAll(query): Promise<{ articles: Article[]; articlesCount: number }> {
     const queryBuilder = this.articleRepository
       .createQueryBuilder('article')
       .leftJoinAndSelect('article.author', 'author')
