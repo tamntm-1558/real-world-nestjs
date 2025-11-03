@@ -1,4 +1,4 @@
-import { Entity, Column, OneToMany } from 'typeorm';
+import { Entity, Column, OneToMany, ManyToMany, JoinTable } from 'typeorm';
 import { BaseEntity } from '../common/base.entity';
 import { Article } from "../articles/article.entity"
 import { Comment } from '../comments/comment.entity';
@@ -32,4 +32,15 @@ export class User extends BaseEntity {
         (comment) => comment.author,
     )
     comments: Comment[]
+
+    @ManyToMany(() => User, (user) => user.followers)
+    @JoinTable({
+        name: 'user_follows',
+        joinColumn: { name: 'followerId', referencedColumnName: 'id' },
+        inverseJoinColumn: { name: 'followingId', referencedColumnName: 'id' },
+    })
+    following: User[]
+
+    @ManyToMany(() => User, (user) => user.following)
+    followers: User[]
 }
