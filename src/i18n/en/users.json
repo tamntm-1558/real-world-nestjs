@@ -4,6 +4,8 @@
   },
   "errors": {
     "update_failed": "Failed to update user profile",
-    "username_already_exists": "User with this username already exists"
+    "username_already_exists": "User with this username already exists",
+    "user_not_found": "User not found",
+    "cannot_follow_yourself": "You cannot follow yourself"
   }
 }

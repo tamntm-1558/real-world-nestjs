@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
@@ -7,6 +7,7 @@ import { UpdateUserResponseDto } from './dto/update-user-response.dto';
 import * as bcrypt from 'bcrypt';
 import { I18nService } from 'nestjs-i18n';
 import { SALT_HASH_PASSWORD } from 'src/config/constant';
+import { ProfileResponseDto } from './dto/profile-response.dto';
 
 @Injectable()
 export class UserService {
@@ -171,10 +172,122 @@ export class UserService {
   }
 
   /**
-   * Expose user repository for other services
-   * @returns User repository
+   * Get user profile by username with following status
+   * @param username - Target user's username
+   * @param currentUserId - Current user's ID (optional)
+   * @returns Profile with following status
    */
-  getUserRepository(): Repository<User> {
-    return this.userRepository;
+  async getProfile(username: string, currentUserId?: number): Promise<{ profile: ProfileResponseDto }> {
+    const user = await this.userRepository.findOne({
+      where: { username },
+      relations: ['followers'],
+    });
+
+    if (!user) {
+      const message = await this.i18n.translate('users.errors.user_not_found');
+      throw new NotFoundException(message);
+    }
+
+    let following = false;
+    if (currentUserId) {
+      following = user.followers.some(follower => follower.id === currentUserId);
+    }
+
+    return {
+      profile: new ProfileResponseDto(user, following),
+    };
+  }
+
+  /**
+   * Follow a user
+   * @param username - Target user's username
+   * @param currentUserId - Current user's ID
+   * @returns Updated profile
+   */
+  async followUser(username: string, currentUserId: number): Promise<{ profile: ProfileResponseDto }> {
+    const targetUser = await this.userRepository.findOne({
+      where: { username },
+      relations: ['followers'],
+    });
+
+    if (!targetUser) {
+      const message = await this.i18n.translate('users.errors.user_not_found');
+      throw new NotFoundException(message);
+    }
+
+    if (targetUser.id === currentUserId) {
+      const message = await this.i18n.translate('users.errors.cannot_follow_yourself');
+      throw new UnauthorizedException(message);
+    }
+
+    const currentUser = await this.userRepository.findOne({
+      where: { id: currentUserId },
+      relations: ['following'],
+    });
+
+    if (!currentUser) {
+      const message = await this.i18n.translate('users.errors.user_not_found');
+      throw new NotFoundException(message);
+    }
+
+    // Check if already following
+    const isAlreadyFollowing = currentUser.following.some(user => user.id === targetUser.id);
+    
+    if (!isAlreadyFollowing) {
+      currentUser.following.push(targetUser);
+      await this.userRepository.save(currentUser);
+    }
+
+    return {
+      profile: new ProfileResponseDto(targetUser, true),
+    };
+  }
+
+  /**
+   * Unfollow a user
+   * @param username - Target user's username
+   * @param currentUserId - Current user's ID
+   * @returns Updated profile
+   */
+  async unfollowUser(username: string, currentUserId: number): Promise<{ profile: ProfileResponseDto }> {
+    const targetUser = await this.userRepository.findOne({
+      where: { username },
+      relations: ['followers'],
+    });
+
+    if (!targetUser) {
+      const message = await this.i18n.translate('users.errors.user_not_found');
+      throw new NotFoundException(message);
+    }
+
+    const currentUser = await this.userRepository.findOne({
+      where: { id: currentUserId },
+      relations: ['following'],
+    });
+
+    if (!currentUser) {
+      const message = await this.i18n.translate('users.errors.user_not_found');
+      throw new NotFoundException(message);
+    }
+
+    // Remove from following
+    currentUser.following = currentUser.following.filter(user => user.id !== targetUser.id);
+    await this.userRepository.save(currentUser);
+
+    return {
+      profile: new ProfileResponseDto(targetUser, false),
+    };
+  }
+
+  /**
+   * Get user with following relationships
+   * @param userId - User ID
+   * @returns User with following relationships or null
+   */
+  async getUserWithFollowing(userId: number): Promise<User | null> {
+    return await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['following'],
+    });
   }
 }

@@ -8,6 +8,7 @@ import { ArticleResponseDto } from './dto/article-response.dto';
 import { ArticleQueryDto } from './dto/article-query.dto';
 import { FeedQueryDto } from './dto/feed-query.dto';
 import { User } from '../users/user.entity';
+import { UserService } from '../users/user.service';
 import { I18nService } from 'nestjs-i18n';
 import { PAGINATION } from 'src/config/constant';
 
@@ -16,6 +17,7 @@ export class ArticleService {
   constructor(
     @InjectRepository(Article)
     private articleRepository: Repository<Article>,
+    private userService: UserService,
     private i18n: I18nService,
   ) {}
 
@@ -248,7 +250,7 @@ export class ArticleService {
   }
 
   /**
-   * TODO: Get feed for user (articles from followed users)
+   * Get feed for user (articles from followed users)
    * @param userId - Current user ID
    * @param limit - Number of articles
    * @param offset - Offset for pagination
@@ -259,9 +261,30 @@ export class ArticleService {
     limit: number = PAGINATION.DEFAULT_LIMIT,
     offset: number = PAGINATION.DEFAULT_OFFSET,
   ): Promise<{ articles: Article[]; articlesCount: number }> {
-    // This would require a Follow entity and relationship
-    // For now, return empty array
-    return { articles: [], articlesCount: 0 };
+    // Get the current user with their following relationships using UserService
+    const currentUser = await this.userService.getUserWithFollowing(userId);
+
+    if (!currentUser || !currentUser.following || currentUser.following.length === 0) {
+      // User has no followings, return empty feed
+      return { articles: [], articlesCount: 0 };
+    }
+
+    // Get IDs of users that the current user is following
+    const followingIds = currentUser.following.map(user => user.id);
+
+    // Query articles from followed users
+    const queryBuilder = this.articleRepository
+      .createQueryBuilder('article')
+      .leftJoinAndSelect('article.author', 'author')
+      .leftJoinAndSelect('article.favoritedBy', 'favoritedBy')
+      .where('author.id IN (:...followingIds)', { followingIds })
+      .orderBy('article.createdAt', 'DESC')
+      .take(limit)
+      .skip(offset);
+
+    const [articles, articlesCount] = await queryBuilder.getManyAndCount();
+
+    return { articles, articlesCount };
   }
 
   /**
